@@ -16,7 +16,7 @@ class ProductApiController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'  => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
         ]);
 
@@ -28,17 +28,19 @@ class ProductApiController extends Controller
         return $product;
     }
 
-    public function update(Request $request, Product $product)
+    public function update(Request $request, $id) // On reçoit l'ID brut
     {
+        $product = Product::findOrFail($id);
         $product->update($request->all());
 
         return response()->json($product);
     }
 
-    public function destroy(Product $product)
+    public function destroy($id) // On reçoit l'ID brut
     {
+        $product = Product::findOrFail($id);
         $product->delete();
-
+    
         return response()->json(null, 204);
     }
 }

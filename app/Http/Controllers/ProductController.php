@@ -17,7 +17,7 @@ class ProductController extends Controller
         $products = Product::query()
             ->when($q, function ($query) use ($q) {
                 $query->where('name', 'like', "%{$q}%")
-                      ->orWhere('description', 'like', "%{$q}%");
+                    ->orWhere('description', 'like', "%{$q}%");
             })
             ->orderBy('name')
             ->paginate(15)
@@ -41,10 +41,10 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'price'       => ['required', 'numeric', 'between:0,999999.99'],
-            'stock'       => ['nullable', 'integer', 'min:0'],
+            'price' => ['required', 'numeric', 'between:0,999999.99'],
+            'stock' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $data['stock'] = $data['stock'] ?? 0;
@@ -61,7 +61,14 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        return view('products.show', compact('product'));
+        // Récupérer les 5 derniers clients ayant acheté ce produit spécifique
+        $recentBuyers = $product->invoiceLines() // Assure-toi d'avoir cette relation
+            ->with('invoice.customer')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('products.show', compact('product', 'recentBuyers'));
     }
 
     /**
@@ -78,10 +85,10 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'price'       => ['required', 'numeric', 'between:0,999999.99'],
-            'stock'       => ['nullable', 'integer', 'min:0'],
+            'price' => ['required', 'numeric', 'between:0,999999.99'],
+            'stock' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $data['stock'] = $data['stock'] ?? 0;

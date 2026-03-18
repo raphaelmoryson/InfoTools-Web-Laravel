@@ -30,5 +30,14 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
             'is_commercial' => true,
         ]);
+
+        User::create([
+            'name' => 'test2',
+            'email' => 'test@infotools2.local',
+            'password' => Hash::make('test'), // mot de passe du compte
+            'created_at' => now(),
+            'updated_at' => now(),
+            'is_commercial' => true,
+        ]);
     }
 }

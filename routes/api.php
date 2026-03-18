@@ -9,32 +9,25 @@ use App\Http\Controllers\Api\InvoiceApiController;
 use App\Http\Controllers\Api\DashboardApiController;
 use App\Http\Middleware\CommercialMiddleware;
 
-/*
-|--------------------------------------------------------------------------
-| Auth API
-|--------------------------------------------------------------------------
-*/
+// routes/api.php
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])
-    ->middleware('auth:sanctum');
 
-/*
-|--------------------------------------------------------------------------
-| API protégée (commercial uniquement)
-|--------------------------------------------------------------------------
-*/
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-Route::apiResource('clients-api', CustomerApiController::class)
-    ->only(['index', 'show', 'store', 'update', 'destroy']);
+    // Ajoute le middleware commercial ici pour protéger les clients
+    Route::middleware('commercial')->group(function () {
+        Route::apiResource('clients-api', CustomerApiController::class)
+            ->parameters(['clients-api' => 'customer']) // <--- AJOUTE CETTE LIGNE
+            ->only(['index', 'show', 'store', 'update', 'destroy']);
+    });
 
-// // Rendez-vous
-Route::apiResource('appointments-api', AppointmentApiController::class);
+    Route::apiResource('appointments-api', AppointmentApiController::class);
 
-// Produits
-Route::apiResource('products-api', ProductApiController::class);
+    Route::apiResource('products-api', ProductApiController::class)
+        ->parameters(['products-api' => 'product']);
 
-// Factures
-Route::apiResource('invoices-api', InvoiceApiController::class);
+    Route::apiResource('invoices-api', InvoiceApiController::class);
 
-// Dashboard / stats
-Route::get('/stats/dashboard-api', DashboardApiController::class);
+    Route::get('/stats/dashboard-api', DashboardApiController::class);
+});

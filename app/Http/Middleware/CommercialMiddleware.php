@@ -4,27 +4,18 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class CommercialMiddleware
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        // Si l'utilisateur n'est pas connecté
-        if (!auth()->check()) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['message' => 'Unauthenticated.'], 401);
-            }
-            return redirect()->route('login');
+        // Vérifie si l'utilisateur est connecté ET s'il est commercial
+        if ($request->user() && $request->user()->is_commercial) {
+            return $next($request);
         }
 
-        // Si l'utilisateur n'est pas commercial
-        if (!auth()->user()->is_commercial) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['message' => 'Forbidden.'], 403);
-            }
-            return redirect()->route('login');
-        }
-
-        return $next($request);
+        // Sinon, on bloque l'accès
+        abort(403, 'Accès réservé aux commerciaux.');
     }
 }

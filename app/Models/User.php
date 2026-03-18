@@ -70,5 +70,10 @@ class User extends Authenticatable
         // Si tu stockes dans la DB un flag "is_commercial"
         return $this->attributes['is_commercial'] ?? false;
     }
+    // Un utilisateur a plusieurs rendez-vous
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
 
 }

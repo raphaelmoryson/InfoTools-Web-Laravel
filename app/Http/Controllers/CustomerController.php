@@ -60,7 +60,8 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer)
     {
-        return view('customer.edit', compact('customer'));
+        $statuses = ['prospect', 'actif', 'inactif', 'perdu'];
+        return view('customer.edit', compact('customer', 'statuses'));
     }
 
     public function update(Request $request, Customer $customer)
@@ -90,6 +91,19 @@ class CustomerController extends Controller
         return redirect()
             ->route('customer.index')
             ->with('success', 'Client mis à jour avec succès.');
+    }
+
+    public function show(Customer $customer)
+    {
+        // On charge les factures et leurs lignes pour la vue
+        $customer->load(['invoices.lines.product']);
+
+        // On récupère les factures paginées (pour que le lien ->links() fonctionne)
+        $invoices = $customer->invoices()
+            ->orderByDesc('invoiced_at')
+            ->paginate(10);
+
+        return view('customer.show', compact('customer', 'invoices'));
     }
     public function destroy(Customer $customer)
     {

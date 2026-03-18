@@ -22,25 +22,32 @@ class HomeController extends Controller
         $endOfWeek   = Carbon::now()->endOfWeek();
 
         $kpis = [
+            // KPIs globaux pour toute l'entreprise
             'rdv_today'    => Appointment::whereDate('start_at', $today)->count(),
             'rdv_week'     => Appointment::whereBetween('start_at', [$startOfWeek, $endOfWeek])->count(),
             'clients_new'  => Customer::where('created_at', '>=', Carbon::now()->subDays(7))->count(),
             'revenue_week' => \App\Models\Invoice::whereBetween('invoiced_at', [$startOfWeek, $endOfWeek])->sum('total'),
         ];
 
-        $upcomingAppointments = Appointment::with('customer')
-            ->where('start_at', '>=', now())
+        // Affichage GLOBAL : on retire le where('user_id', ...) pour que tout le monde voie le planning complet
+        // On s'assure de charger la relation 'commercial' pour avoir le nom
+        $upcomingAppointments = Appointment::with(['customer', 'commercial'])
+            ->where('start_at', '>=', Carbon::today())
             ->orderBy('start_at')
             ->limit(10)
             ->get()
             ->map(function ($a) {
                 return (object) [
-                    'start_at'       => $a->start_at,
-                    'subject'        => $a->subject,
-                    'client_name'    => optional($a->customer)->name ?? '—',
-                    'client_company' => optional($a->customer)->company ?? null,
-                    'location'       => optional($a->customer)->address ?? null,
-                    'status'         => 'prévu',
+                    'id'              => $a->id,
+                    'start_at'        => $a->start_at,
+                    'end_at'          => $a->end_at,
+                    'subject'         => $a->subject,
+                    'client_name'     => optional($a->customer)->name ?? '—',
+                    'client_company'  => optional($a->customer)->company ?? null,
+                    'location'        => optional($a->customer)->address ?? null,
+                    'status'          => 'prévu',
+                    // On récupère le nom du commercial (grâce à la relation belongsTo créée avant)
+                    'commercial_name' => optional($a->commercial)->name ?? 'Non assigné',
                 ];
             });
 

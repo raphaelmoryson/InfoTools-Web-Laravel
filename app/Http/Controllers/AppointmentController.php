@@ -51,13 +51,18 @@ class AppointmentController extends Controller
      */
     public function store(StoreAppointmentRequest $request)
     {
+        // 1. On récupère les données validées par le FormRequest
         $data = $request->validated();
+
+        // 2. 🔒 On force l'injection de l'utilisateur connecté côté serveur
+        $data['user_id'] = auth()->id();
+
+        // 3. On crée le rendez-vous
         $appointment = Appointment::create($data);
 
         return redirect()->route('appointments.show', $appointment)
             ->with('success', 'Rendez-vous créé avec succès.');
     }
-
 
     /**
      * Détail.

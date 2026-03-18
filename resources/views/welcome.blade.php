@@ -192,7 +192,7 @@
                                         </div>
                                     </div>
                                     <div class="ms-3 flex-grow-1 overflow-hidden">
-                                        <h6 class="mb-0 text-truncate" title="{{ $rdv->client_name }}">{{ $rdv->client_name }}
+                                        <h6 class="mb-0 text-truncate" title="{{ $rdv->customer->first_name }}">{{ $rdv->customer->last_name }}
                                         </h6>
                                         <small class="text-muted d-block text-truncate">
                                             {{ \Carbon\Carbon::parse($rdv->start_at)->format('H:i') }} •
@@ -274,34 +274,170 @@
     {{-- Styles CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
     <style>
-        .ls-1 { letter-spacing: 0.5px; }
-        .card-hover-effect { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .card-hover-effect:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .08) !important; }
-        #appointments-calendar { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; padding: 1rem; min-height: 600px; }
-        .fc .fc-toolbar.fc-header-toolbar { margin-bottom: 1.5rem; }
-        .fc .fc-button-primary { background-color: white; border: 1px solid #dee2e6; color: #495057; font-weight: 600; text-transform: capitalize; padding: 0.4rem 1rem; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
-        .fc .fc-button-primary:hover { background-color: #f8f9fa; border-color: #cdd4da; color: #212529; }
-        .fc .fc-button-primary:not(:disabled).fc-button-active { background-color: var(--bs-primary); border-color: var(--bs-primary); color: white; }
-        .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 700; color: #343a40; }
-        .fc-theme-standard td, .fc-theme-standard th { border-color: #f1f3f5; }
-        .fc .fc-col-header-cell-cushion { color: #868e96; text-transform: uppercase; font-size: 0.75rem; padding: 10px 0; }
-        .fc .fc-daygrid-day-number { color: #495057; font-weight: 500; padding: 8px 12px; }
-        .fc .fc-day-today { background-color: transparent !important; }
-        .fc .fc-day-today .fc-daygrid-day-number { background: var(--bs-primary); color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin: 4px; }
-        .fc-event { border: none; cursor: pointer; transition: all 0.15s ease-in-out; }
-        .fc-event:hover { transform: scale(1.02); filter: brightness(0.95); }
-        .fc-event-main-content { display: flex; align-items: center; gap: 6px; padding: 2px 4px; font-size: 0.8rem; }
-        .fc-event-dot { width: 6px; height: 6px; border-radius: 50%; background-color: white; flex-shrink: 0; }
-        .fc-event-time { font-weight: 600; opacity: 0.9; font-size: 0.75rem; }
-        .fc-event-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bg-status-confirmed { background-color: #d1e7dd !important; border-left: 3px solid #198754 !important; color: #0f5132 !important; }
-        .bg-status-confirmed .fc-event-dot { background-color: #198754; }
-        .bg-status-pending { background-color: #fff3cd !important; border-left: 3px solid #ffc107 !important; color: #664d03 !important; }
-        .bg-status-pending .fc-event-dot { background-color: #ffc107; }
-        .bg-status-cancelled { background-color: #f8d7da !important; border-left: 3px solid #dc3545 !important; color: #842029 !important; }
-        .bg-status-cancelled .fc-event-dot { background-color: #dc3545; }
-        .bg-status-default { background-color: #cfe2ff !important; border-left: 3px solid #0d6efd !important; color: #084298 !important; }
-        .bg-status-default .fc-event-dot { background-color: #0d6efd; }
+        .ls-1 {
+            letter-spacing: 0.5px;
+        }
+
+        .card-hover-effect {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-hover-effect:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .08) !important;
+        }
+
+        #appointments-calendar {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 1rem;
+            min-height: 600px;
+        }
+
+        .fc .fc-toolbar.fc-header-toolbar {
+            margin-bottom: 1.5rem;
+        }
+
+        .fc .fc-button-primary {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            font-weight: 600;
+            text-transform: capitalize;
+            padding: 0.4rem 1rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .fc .fc-button-primary:hover {
+            background-color: #f8f9fa;
+            border-color: #cdd4da;
+            color: #212529;
+        }
+
+        .fc .fc-button-primary:not(:disabled).fc-button-active {
+            background-color: var(--bs-primary);
+            border-color: var(--bs-primary);
+            color: white;
+        }
+
+        .fc .fc-toolbar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #343a40;
+        }
+
+        .fc-theme-standard td,
+        .fc-theme-standard th {
+            border-color: #f1f3f5;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            color: #868e96;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            padding: 10px 0;
+        }
+
+        .fc .fc-daygrid-day-number {
+            color: #495057;
+            font-weight: 500;
+            padding: 8px 12px;
+        }
+
+        .fc .fc-day-today {
+            background-color: transparent !important;
+        }
+
+        .fc .fc-day-today .fc-daygrid-day-number {
+            background: var(--bs-primary);
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px;
+        }
+
+        .fc-event {
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .fc-event:hover {
+            transform: scale(1.02);
+            filter: brightness(0.95);
+        }
+
+        .fc-event-main-content {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 4px;
+            font-size: 0.8rem;
+        }
+
+        .fc-event-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: white;
+            flex-shrink: 0;
+        }
+
+        .fc-event-time {
+            font-weight: 600;
+            opacity: 0.9;
+            font-size: 0.75rem;
+        }
+
+        .fc-event-title {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bg-status-confirmed {
+            background-color: #d1e7dd !important;
+            border-left: 3px solid #198754 !important;
+            color: #0f5132 !important;
+        }
+
+        .bg-status-confirmed .fc-event-dot {
+            background-color: #198754;
+        }
+
+        .bg-status-pending {
+            background-color: #fff3cd !important;
+            border-left: 3px solid #ffc107 !important;
+            color: #664d03 !important;
+        }
+
+        .bg-status-pending .fc-event-dot {
+            background-color: #ffc107;
+        }
+
+        .bg-status-cancelled {
+            background-color: #f8d7da !important;
+            border-left: 3px solid #dc3545 !important;
+            color: #842029 !important;
+        }
+
+        .bg-status-cancelled .fc-event-dot {
+            background-color: #dc3545;
+        }
+
+        .bg-status-default {
+            background-color: #cfe2ff !important;
+            border-left: 3px solid #0d6efd !important;
+            color: #084298 !important;
+        }
+
+        .bg-status-default .fc-event-dot {
+            background-color: #0d6efd;
+        }
     </style>
 
     {{-- Scripts JS --}}
@@ -334,7 +470,7 @@
 
             const events = [
                 @foreach(($upcomingAppointments ?? []) as $rdv)
-                    {
+                            {
                         id: "{{ $rdv->id ?? uniqid() }}",
                         title: @json($rdv->client_name ?? 'Client inconnu'),
                         start: @json(\Carbon\Carbon::parse($rdv->start_at)->toIso8601String()),
@@ -351,7 +487,7 @@
                         }
                     }@if (!$loop->last), @endif
                 @endforeach
-            ];
+                ];
 
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 locale: 'fr',
@@ -382,10 +518,10 @@
                     let customHtml = document.createElement('div');
                     customHtml.className = 'fc-event-main-content';
                     customHtml.innerHTML = `
-                            <span class="fc-event-dot"></span>
-                            <span class="fc-event-time">${timeText}</span>
-                            <span class="fc-event-title">${title}</span>
-                        `;
+                                <span class="fc-event-dot"></span>
+                                <span class="fc-event-time">${timeText}</span>
+                                <span class="fc-event-title">${title}</span>
+                            `;
                     return { domNodes: [customHtml] };
                 },
 

@@ -2,9 +2,6 @@
 
 @section('content')
 <div class="container-fluid mt-4">
-    <h1 class="h4 mb-3">
-        <i class="bi bi-eye me-2"></i>Rendez-vous
-    </h1>
 
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>

@@ -5,7 +5,6 @@
     <div class="container-fluid mt-4">
 
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-            <h1 class="h3 mb-2 mb-sm-0"><i class="bi bi-receipt me-2"></i>Factures</h1>
             <a href="{{ route('invoices.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-2"></i>Nouvelle facture
             </a>

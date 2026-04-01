@@ -2,47 +2,51 @@
 
 namespace App\Observers;
 
+use App\Models\AuditLog;
 use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
 
 class ProductObserver
 {
-    /**
-     * Handle the Product "created" event.
-     */
     public function created(Product $product): void
     {
-        //
+        AuditLog::create([
+            'user_id'    => Auth::id(),
+            'table_name' => $product->getTable(),
+            'row_id'     => $product->getKey(),
+            'action'     => 'INSERT',
+            'changed'    => json_encode($product->getAttributes()),
+            'ip'         => request()?->ip(),
+            'created_at' => now(),
+        ]);
     }
 
-    /**
-     * Handle the Product "updated" event.
-     */
     public function updated(Product $product): void
     {
-        //
+        AuditLog::create([
+            'user_id'    => Auth::id(),
+            'table_name' => $product->getTable(),
+            'row_id'     => $product->getKey(),
+            'action'     => 'UPDATE',
+            'changed'    => json_encode([
+                'before' => $product->getOriginal(),
+                'after'  => $product->getChanges(),
+            ]),
+            'ip'         => request()?->ip(),
+            'created_at' => now(),
+        ]);
     }
 
-    /**
-     * Handle the Product "deleted" event.
-     */
     public function deleted(Product $product): void
     {
-        //
-    }
-
-    /**
-     * Handle the Product "restored" event.
-     */
-    public function restored(Product $product): void
-    {
-        //
-    }
-
-    /**
-     * Handle the Product "force deleted" event.
-     */
-    public function forceDeleted(Product $product): void
-    {
-        //
+        AuditLog::create([
+            'user_id'    => Auth::id(),
+            'table_name' => $product->getTable(),
+            'row_id'     => $product->getKey(),
+            'action'     => 'DELETE',
+            'changed'    => json_encode(['before' => $product->getOriginal()]),
+            'ip'         => request()?->ip(),
+            'created_at' => now(),
+        ]);
     }
 }

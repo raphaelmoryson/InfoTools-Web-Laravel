@@ -40,7 +40,7 @@ class AppointmentController extends Controller
      */
     public function create()
     {
-        $customers = Customer::orderBy('name')->pluck('name', 'id');
+        $customers = Customer::orderBy('last_name')->pluck('full_name', 'id');
         $commercials = User::orderBy('name')->pluck('name', 'id');
 
         return view('appointments.create', compact('customers', 'commercials'));
@@ -78,7 +78,7 @@ class AppointmentController extends Controller
      */
     public function edit(Appointment $appointment)
     {
-        $customers = Customer::orderBy('name')->pluck('name', 'id');
+        $customers = Customer::orderBy('last_name')->pluck('full_name', 'id');
         $commercials = User::orderBy('name')->pluck('name', 'id');
 
         return view('appointments.edit', compact('appointment', 'customers', 'commercials'));

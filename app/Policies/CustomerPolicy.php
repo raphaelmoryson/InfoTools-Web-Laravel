@@ -4,63 +4,66 @@ namespace App\Policies;
 
 use App\Models\Customer;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class CustomerPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Tout utilisateur authentifié peut lister les clients.
+     * (Le filtrage par commercial se fait dans le contrôleur/query scope.)
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Un responsable voit tous les clients.
+     * Un commercial ne voit que ses propres clients.
      */
     public function view(User $user, Customer $customer): bool
     {
-        return false;
+        return !$user->is_commercial || $customer->user_id === $user->id;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Tout utilisateur authentifié peut créer un client.
      */
     public function create(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Un responsable peut modifier tous les clients.
+     * Un commercial ne modifie que ses propres clients.
      */
     public function update(User $user, Customer $customer): bool
     {
-        return false;
+        return !$user->is_commercial || $customer->user_id === $user->id;
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Un responsable peut supprimer tous les clients.
+     * Un commercial ne supprime que ses propres clients.
      */
     public function delete(User $user, Customer $customer): bool
     {
-        return false;
+        return !$user->is_commercial || $customer->user_id === $user->id;
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Seul un responsable peut restaurer un client supprimé.
      */
     public function restore(User $user, Customer $customer): bool
     {
-        return false;
+        return !$user->is_commercial;
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Seul un responsable peut supprimer définitivement un client.
      */
     public function forceDelete(User $user, Customer $customer): bool
     {
-        return false;
+        return !$user->is_commercial;
     }
 }

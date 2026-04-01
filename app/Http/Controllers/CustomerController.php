@@ -19,7 +19,18 @@ class CustomerController extends Controller
         $statuses = ['prospect', 'actif', 'inactif', 'perdu'];
         return view('customer.create', compact('statuses'));
     }
+    public function purchases(Request $request)
+    {
+        $customer = Customer::with(['invoices.lines.product'])
+            ->findOrFail($request->query('customer_id'));
 
+        $invoices = $customer->invoices()
+            ->with('lines.product')
+            ->orderByDesc('invoiced_at')
+            ->paginate(10);
+
+        return view('customer.purchases', compact('customer', 'invoices'));
+    }
     public function store(Request $request)
     {
         $statuses = ['prospect', 'actif', 'inactif', 'perdu'];
@@ -50,7 +61,8 @@ class CustomerController extends Controller
         // Valeur par défaut cohérente
         $validated['country'] = $validated['country'] ?? 'France';
         $validated['status'] = $validated['status'] ?? 'prospect';
-
+        // Concatène first_name + last_name dans name
+        $validated['name'] = trim(($validated['first_name'] ?? '') . ' ' . ($validated['last_name'] ?? ''));
         Customer::create($validated);
 
         return redirect()

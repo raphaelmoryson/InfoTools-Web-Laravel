@@ -5,7 +5,6 @@
 <div class="container-fluid mt-4">
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-        <h1 class="h3 mb-2 mb-sm-0"><i class="bi bi-calendar3 me-2"></i>Rendez-vous</h1>
         <a href="{{ route('appointments.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-2"></i>Nouveau rendez-vous
         </a>

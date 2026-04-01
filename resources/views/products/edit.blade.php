@@ -3,8 +3,6 @@
 
 @section('content')
 <div class="container-fluid mt-4">
-    <h1 class="h4 mb-3"><i class="bi bi-pencil-square me-2"></i>Modifier le produit</h1>
-
     @if ($errors->any())
         <div class="alert alert-danger">
             <div class="fw-semibold mb-1">Corrige les erreurs suivantes :</div>

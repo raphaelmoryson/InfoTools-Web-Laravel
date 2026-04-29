@@ -22,9 +22,19 @@ class AppointmentController extends Controller
 
         $appointments = Appointment::query()
             ->with(['customer', 'commercial'])
+
+            // 🔒 CONDITION DE VISIBILITÉ
+            // Si l'utilisateur est un commercial (is_commercial == 1), on filtre.
+            // Si c'est un manager (is_commercial == 0), on ne fait rien (il voit tout).
+            ->when(auth()->user()->is_commercial == 1, function ($query) {
+                $query->where('user_id', auth()->id());
+            })
+
             ->when($q, function ($query) use ($q) {
-                $query->where('subject', 'like', "%{$q}%")
-                    ->orWhereHas('customer', fn($qq) => $qq->where('name', 'like', "%{$q}%"));
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('subject', 'like', "%{$q}%")
+                        ->orWhereHas('customer', fn($qq) => $qq->where('last_name', 'like', "%{$q}%"));
+                });
             })
             ->when($dateFrom, fn($query) => $query->where('start_at', '>=', $dateFrom))
             ->when($dateTo, fn($query) => $query->where('start_at', '<=', $dateTo))
@@ -40,12 +50,17 @@ class AppointmentController extends Controller
      */
     public function create()
     {
-        $customers = Customer::orderBy('last_name')->pluck('full_name', 'id');
+        $customers = Customer::orderBy('last_name')
+            ->get()
+            ->pluck('full_name', 'id');
+
         $commercials = User::orderBy('name')->pluck('name', 'id');
 
-        return view('appointments.create', compact('customers', 'commercials'));
-    }
+        // On définit l'ID du commercial par défaut (l'utilisateur connecté)
+        $defaultCommercialId = auth()->id();
 
+        return view('appointments.create', compact('customers', 'commercials', 'defaultCommercialId'));
+    }
     /**
      * Enregistrement.
      */
@@ -78,7 +93,9 @@ class AppointmentController extends Controller
      */
     public function edit(Appointment $appointment)
     {
-        $customers = Customer::orderBy('last_name')->pluck('full_name', 'id');
+        $customers = Customer::orderBy('last_name')
+            ->get() // On récupère les objets Eloquent d'abord
+            ->pluck('full_name', 'id');
         $commercials = User::orderBy('name')->pluck('name', 'id');
 
         return view('appointments.edit', compact('appointment', 'customers', 'commercials'));

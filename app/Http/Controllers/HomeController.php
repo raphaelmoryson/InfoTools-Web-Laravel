@@ -6,10 +6,11 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Appointment;
 use App\Models\Customer;
+use App\Models\Invoice;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
-    // Appliquer le middleware auth à toutes les méthodes
     public function __construct()
     {
         $this->middleware('auth');
@@ -17,50 +18,48 @@ class HomeController extends Controller
 
     public function index()
     {
-        $today       = Carbon::today();
+        $user = Auth::user();
+        $today = Carbon::today();
         $startOfWeek = Carbon::now()->startOfWeek();
-        $endOfWeek   = Carbon::now()->endOfWeek();
+        $endOfWeek = Carbon::now()->endOfWeek();
+
+        // --- LOGIQUE DE FILTRAGE ---
+        // Si c'est un commercial, on filtre par son ID. 
+        // Si c'est un manager (is_commercial = false), on ne filtre pas (null).
+        $commercialId = $user->is_commercial ? $user->id : null;
 
         $kpis = [
-            // KPIs globaux pour toute l'entreprise
-            'rdv_today'    => Appointment::whereDate('start_at', $today)->count(),
-            'rdv_week'     => Appointment::whereBetween('start_at', [$startOfWeek, $endOfWeek])->count(),
-            'clients_new'  => Customer::where('created_at', '>=', Carbon::now()->subDays(7))->count(),
-            'revenue_week' => \App\Models\Invoice::whereBetween('invoiced_at', [$startOfWeek, $endOfWeek])->sum('total'),
+            'rdv_today' => Appointment::query()
+                ->when($commercialId, fn($q) => $q->where('user_id', $commercialId))
+                ->whereDate('start_at', $today)
+                ->count(),
+
+            'rdv_week' => Appointment::query()
+                ->when($commercialId, fn($q) => $q->where('user_id', $commercialId))
+                ->whereBetween('start_at', [$startOfWeek, $endOfWeek])
+                ->count(),
+
+            'clients_new' => Customer::query()
+                ->when($commercialId, fn($q) => $q->where('user_id', $commercialId)) // Si tes clients sont liés à un commercial
+                ->where('created_at', '>=', Carbon::now()->subDays(7))
+                ->count(),
+
+            'revenue_week' => Invoice::query()
+                ->when($commercialId, function($q) use ($commercialId) {
+                    // On ne somme que les factures des clients appartenant au commercial
+                    $q->whereHas('customer', fn($sub) => $sub->where('user_id', $commercialId));
+                })
+                ->whereBetween('invoiced_at', [$startOfWeek, $endOfWeek])
+                ->sum('total'),
         ];
 
-        // Affichage GLOBAL : on retire le where('user_id', ...) pour que tout le monde voie le planning complet
-        // On s'assure de charger la relation 'commercial' pour avoir le nom
+        // --- LISTE DES RDV (CALENDRIER) ---
         $upcomingAppointments = Appointment::with(['customer', 'commercial'])
-            ->where('start_at', '>=', Carbon::today())
+            ->when($commercialId, fn($q) => $q->where('user_id', $commercialId))
+            ->where('start_at', '>=', $today->copy()->subDays(30)) // On prend un peu de passé pour le calendrier
             ->orderBy('start_at')
-            ->limit(10)
-            ->get()
-            ->map(function ($a) {
-                return (object) [
-                    'id'              => $a->id,
-                    'start_at'        => $a->start_at,
-                    'end_at'          => $a->end_at,
-                    'subject'         => $a->subject,
-                    'client_name'     => optional($a->customer)->name ?? '—',
-                    'client_company'  => optional($a->customer)->company ?? null,
-                    'location'        => optional($a->customer)->address ?? null,
-                    'status'          => 'prévu',
-                    // On récupère le nom du commercial (grâce à la relation belongsTo créée avant)
-                    'commercial_name' => optional($a->commercial)->name ?? 'Non assigné',
-                ];
-            });
+            ->get();
 
-        $recentPurchases = [];
-        $topProducts     = [];
-        $auditLogs       = [];
-
-        return view('welcome', compact(
-            'kpis',
-            'upcomingAppointments',
-            'recentPurchases',
-            'topProducts',
-            'auditLogs'
-        ));
+        return view('welcome', compact('kpis', 'upcomingAppointments'));
     }
 }

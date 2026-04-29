@@ -41,7 +41,6 @@
                     <tr>
                         <th>Nom</th>
                         <th>Prix</th>
-                        <th>Stock</th>
                         <th>Description</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -51,7 +50,6 @@
                         <tr>
                             <td>{{ $p->name }}</td>
                             <td>{{ number_format($p->price, 2, ',', ' ') }} €</td>
-                            <td>{{ $p->stock }}</td>
                             <td class="text-muted small">{{ Str::limit($p->description, 60) }}</td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">

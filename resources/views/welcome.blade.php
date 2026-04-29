@@ -192,7 +192,7 @@
                                         </div>
                                     </div>
                                     <div class="ms-3 flex-grow-1 overflow-hidden">
-                                        <h6 class="mb-0 text-truncate" title="{{ $rdv->customer->first_name }}">{{ $rdv->customer->last_name }}
+                                        <h6 class="mb-0 text-truncate" title="{{ $rdv->customer->name }}"
                                         </h6>
                                         <small class="text-muted d-block text-truncate">
                                             {{ \Carbon\Carbon::parse($rdv->start_at)->format('H:i') }} •
@@ -472,14 +472,14 @@
                 @foreach(($upcomingAppointments ?? []) as $rdv)
                             {
                         id: "{{ $rdv->id ?? uniqid() }}",
-                        title: @json($rdv->client_name ?? 'Client inconnu'),
+                        title: @json($rdv->customer->name ?? 'Client inconnu'),
                         start: @json(\Carbon\Carbon::parse($rdv->start_at)->toIso8601String()),
                         end: @json(!empty($rdv->end_at) ? \Carbon\Carbon::parse($rdv->end_at)->toIso8601String() : null),
                         classNames: [getStatusClass(@json($rdv->status ?? 'prévu'))],
                         extendedProps: {
                             subject: @json($rdv->subject ?? 'Rendez-vous'),
                             status: @json($rdv->status ?? 'prévu'),
-                            client: @json($rdv->client_name ?? ''),
+                            client: @json($rdv->customer->name ?? ''),
                             company: @json($rdv->client_company ?? null),
                             location: @json($rdv->location ?? 'Au cabinet'),
                             commercial: @json($rdv->commercial_name), // Récupération de la donnée

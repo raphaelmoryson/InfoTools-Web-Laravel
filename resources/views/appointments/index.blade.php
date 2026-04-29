@@ -53,7 +53,7 @@
                         <tr>
                             <td>{{ \Carbon\Carbon::parse($a->start_at)->format('d/m/Y H:i') }}</td>
                             <td>{{ $a->end_at ? \Carbon\Carbon::parse($a->end_at)->format('d/m/Y H:i') : '—' }}</td>
-                            <td><b>{{ $a->customer->first_name ?? '—' }} {{ $a->customer->last_name }}</b></td>
+                            <td><b>{{ $a->customer->name }}</b></td>
                             <td>{{ $a->subject }}</td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">
